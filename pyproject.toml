@@ -1,0 +1,50 @@
+[project]
+name = "mean-pic"
+version = "0.1.0"
+description = "Interpolate images in a diffusion model's latent space"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "accelerate>=1.10",
+    "diffusers>=0.35",
+    "pillow>=11.0",
+    "safetensors>=0.5",
+    "torch==2.9.1",
+    "torchvision==0.24.1",
+    "transformers>=5.11",
+]
+
+[project.optional-dependencies]
+server = ["fastapi>=0.116", "uvicorn[standard]>=0.35"]
+
+[project.scripts]
+mean-pic = "mean_pic.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.4"]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "corpnet"
+url = "https://packagefeedproxy.microsoft.io/pypi/simple/"
+default = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+]
+torchvision = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
