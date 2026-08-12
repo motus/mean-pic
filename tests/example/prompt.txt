@@ -1,0 +1,1 @@
+Your task is to reproduce the image from the embedding as close to the original as possible. For synthetic embeddings that are an average of several images, the output should resemble all original images, i.e., include some characteristic features from all of them
