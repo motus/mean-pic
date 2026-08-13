@@ -28,12 +28,12 @@ def test_cli_accepts_zero_steps_and_prompt() -> None:
             "--steps",
             "0",
             "--prompt",
-            "prompt.txt",
+            "a coherent hybrid",
         ]
     )
 
     assert args.steps == 0
-    assert args.prompt == Path("prompt.txt")
+    assert args.prompt == "a coherent hybrid"
 
 
 def test_cli_builds_remote_model(monkeypatch: pytest.MonkeyPatch) -> None:

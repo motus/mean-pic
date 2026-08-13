@@ -54,8 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--prompt",
-        type=Path,
-        help="UTF-8 text prompt file for diffusion refinement",
+        help="text prompt for diffusion refinement",
     )
     parser.add_argument(
         "--generation-prompt",
@@ -100,12 +99,11 @@ def main() -> None:
             image_a = first.convert("RGB")
         with Image.open(args.second) as second:
             image_b = second.convert("RGB")
-        prompt = args.prompt.read_text(encoding="utf-8") if args.prompt else None
         if isinstance(model, RemoteLatentImageModel):
             result = model.interpolate_images(
                 image_a,
                 image_b,
-                prompt=prompt,
+                prompt=args.prompt,
                 max_iterations=args.steps,
             )
         else:
@@ -113,7 +111,7 @@ def main() -> None:
                 model,
                 image_a,
                 image_b,
-                prompt=prompt,
+                prompt=args.prompt,
                 max_iterations=args.steps,
             )
         result.save(args.output)

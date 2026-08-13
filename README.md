@@ -37,8 +37,8 @@ Important options:
 | `--model-id ID` | Diffusers image-to-image model; defaults to Stable Diffusion 1.5 |
 | `--steps N` | Maximum diffusion denoising steps; defaults to 48 |
 | `--steps 0` | Skip diffusion and directly VAE-decode the averaged latent |
-| `--prompt FILE` | Read the diffusion refinement prompt from a UTF-8 file |
-| `--generation-prompt TEXT` | Add a local prompt after the file prompt |
+| `--prompt TEXT` | Set the diffusion refinement prompt |
+| `--generation-prompt TEXT` | Append an additional local diffusion prompt |
 | `--cpu-offload` | Save GPU memory by offloading inactive components to CPU RAM |
 | `--backend remote --endpoint-url URL` | Perform interpolation through the HTTP API |
 
