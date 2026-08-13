@@ -30,9 +30,8 @@ For an NVIDIA CUDA 12.8 installation:
 uv sync --extra cuda
 ```
 
-The `cpu` and `cuda` extras are mutually exclusive. When installing the built
-package with pip, the equivalent syntax is `mean-pic[cpu]` or
-`mean-pic[cuda]`.
+The `cpu` and `cuda` extras are mutually exclusive. Always select one: plain
+`uv sync` can resolve PyTorch transitively from the default package index.
 
 The first local run downloads the selected model from Hugging Face.
 
