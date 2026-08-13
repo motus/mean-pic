@@ -9,12 +9,12 @@ dependencies = [
     "diffusers>=0.35",
     "pillow>=11.0",
     "safetensors>=0.5",
-    "torch==2.9.1",
-    "torchvision==0.24.1",
     "transformers>=5.11",
 ]
 
 [project.optional-dependencies]
+cpu = ["torch==2.9.1", "torchvision==0.24.1"]
+cuda = ["torch==2.9.1", "torchvision==0.24.1"]
 server = ["fastapi>=0.116", "uvicorn[standard]>=0.35"]
 
 [project.scripts]
@@ -22,6 +22,11 @@ mean-pic = "mean_pic.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.4"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [[tool.uv.index]]
 name = "pytorch-cu128"
@@ -33,12 +38,22 @@ name = "corpnet"
 url = "https://packagefeedproxy.microsoft.io/pypi/simple/"
 default = true
 
+[tool.uv]
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "cuda" },
+    ],
+]
+
 [tool.uv.sources]
 torch = [
-    { index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu128", extra = "cuda" },
 ]
 torchvision = [
-    { index = "pytorch-cu128", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu128", extra = "cuda" },
 ]
 
 [build-system]

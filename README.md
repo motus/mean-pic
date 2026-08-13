@@ -18,9 +18,21 @@ filename.
 
 Python 3.11-3.13 and a recent PyTorch installation are required.
 
+For a CPU-only installation without NVIDIA packages:
+
 ```console
-uv sync
+uv sync --extra cpu
 ```
+
+For an NVIDIA CUDA 12.8 installation:
+
+```console
+uv sync --extra cuda
+```
+
+The `cpu` and `cuda` extras are mutually exclusive. When installing the built
+package with pip, the equivalent syntax is `mean-pic[cpu]` or
+`mean-pic[cuda]`.
 
 The first local run downloads the selected model from Hugging Face.
 
@@ -98,7 +110,7 @@ floating-point tensor shaped `[latent_channels, latent_height, latent_width]`.
 Install server dependencies and start the service:
 
 ```console
-uv sync --extra server
+uv sync --extra cpu --extra server
 uv run uvicorn mean_pic.server:app --host 0.0.0.0 --port 8000
 ```
 
