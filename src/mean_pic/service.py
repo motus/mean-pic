@@ -18,18 +18,23 @@ class LatentImageService:
     def handle(self, operation: str, payload: dict[str, Any]) -> dict[str, Any]:
         self._validate_metadata(payload)
         if operation == "encode":
+            embedding = self.model.image_to_embedding(
+                decode_image(payload.get("image"))
+            )
             result = {
-                "values": self.model.image_to_embedding(
-                    decode_image(payload.get("image"))
-                ).values.float().tolist()
+                "values": embedding.values.float().tolist(),
+                "noise": embedding.noise.float().tolist(),
             }
         elif operation == "decode":
             try:
                 embedding = ImageEmbedding(
-                    torch.tensor(payload["values"], dtype=torch.float32)
+                    torch.tensor(payload["values"], dtype=torch.float32),
+                    torch.tensor(payload["noise"], dtype=torch.float32),
                 )
             except (KeyError, TypeError, ValueError) as error:
-                raise ValueError("values must be a finite image latent") from error
+                raise ValueError(
+                    "values and noise must be a valid image embedding"
+                ) from error
             result = {
                 "image": encode_image(
                     self.model.embedding_to_image(

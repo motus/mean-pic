@@ -11,7 +11,7 @@ from PIL import Image
 from mean_pic.api import ImageEmbedding
 from mean_pic.image_io import decode_image, encode_image
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,9 +36,10 @@ class RemoteLatentImageModel:
         response = self._request("encode", {"image": encode_image(image)})
         try:
             values = torch.tensor(response["values"], dtype=torch.float32)
+            noise = torch.tensor(response["noise"], dtype=torch.float32)
         except (KeyError, TypeError, ValueError) as error:
             raise ValueError("remote encode response has invalid embedding") from error
-        return ImageEmbedding(values)
+        return ImageEmbedding(values, noise)
 
     def embedding_to_image(
         self,
@@ -48,7 +49,8 @@ class RemoteLatentImageModel:
         max_iterations: int | None = None,
     ) -> Image.Image:
         payload: dict[str, Any] = {
-            "values": embedding.values.detach().float().cpu().tolist()
+            "values": embedding.values.detach().float().cpu().tolist(),
+            "noise": embedding.noise.detach().float().cpu().tolist(),
         }
         if prompt is not None:
             payload["prompt"] = prompt

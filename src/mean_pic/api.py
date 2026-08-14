@@ -9,17 +9,26 @@ from PIL import Image
 
 @dataclass(frozen=True, slots=True)
 class ImageEmbedding:
-    """A single image latent with shape [channels, height, width]."""
+    """An image latent and its component-wise posterior standard deviation."""
 
     values: torch.Tensor
+    noise: torch.Tensor
 
     def __post_init__(self) -> None:
         if self.values.ndim != 3:
             raise ValueError("embedding must have shape [channels, height, width]")
+        if self.noise.shape != self.values.shape:
+            raise ValueError("noise must have the same shape as embedding values")
         if not self.values.is_floating_point():
             raise TypeError("embedding values must be floating point")
-        if not torch.isfinite(self.values).all():
-            raise ValueError("embedding values must be finite")
+        if not self.noise.is_floating_point():
+            raise TypeError("noise values must be floating point")
+        if not torch.isfinite(self.values).all() or not torch.isfinite(
+            self.noise
+        ).all():
+            raise ValueError("embedding values and noise must be finite")
+        if not torch.all(self.noise > 0):
+            raise ValueError("noise values must be positive")
 
 
 class LatentImageModel(Protocol):
@@ -42,8 +51,13 @@ def mean_embeddings(*embeddings: ImageEmbedding) -> ImageEmbedding:
     if any(item.values.shape != shape for item in embeddings[1:]):
         raise ValueError("all embeddings must have the same shape")
 
-    values = torch.stack([item.values.float() for item in embeddings]).mean(dim=0)
-    return ImageEmbedding(values)
+    values = torch.stack([item.values.float() for item in embeddings])
+    noise = torch.stack([item.noise.float() for item in embeddings])
+    precision = noise.square().reciprocal()
+    total_precision = precision.sum(dim=0)
+    weighted_values = (values * precision).sum(dim=0) / total_precision
+    combined_noise = total_precision.rsqrt()
+    return ImageEmbedding(weighted_values, combined_noise)
 
 
 def interpolate_images(

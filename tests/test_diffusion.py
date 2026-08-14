@@ -15,6 +15,8 @@ from mean_pic.diffusion import (
 
 
 class FakeLatentDistribution:
+    std = torch.full((1, 4, 2, 2), 0.4)
+
     def mode(self) -> torch.Tensor:
         return torch.full((1, 4, 2, 2), 2.0)
 
@@ -76,6 +78,7 @@ def test_image_to_embedding_uses_deterministic_vae_mode() -> None:
 
     assert result.values.shape == (4, 2, 2)
     assert torch.equal(result.values, torch.full((4, 2, 2), 0.875))
+    assert torch.allclose(result.noise, torch.full((4, 2, 2), 0.2))
 
 
 def test_zero_steps_decodes_mean_latent_without_diffusion() -> None:
@@ -86,7 +89,10 @@ def test_zero_steps_decodes_mean_latent_without_diffusion() -> None:
     )
 
     result = model.embedding_to_image(
-        ImageEmbedding(torch.full((4, 2, 2), 0.875)),
+        ImageEmbedding(
+            torch.full((4, 2, 2), 0.875),
+            torch.full((4, 2, 2), 0.2),
+        ),
         max_iterations=0,
     )
 
@@ -101,7 +107,7 @@ def test_positive_steps_refine_latent() -> None:
         DiffusionImageSettings(prompt="quality", strength=0.25),
         pipeline=pipeline,
     )
-    embedding = ImageEmbedding(torch.zeros(4, 2, 2))
+    embedding = ImageEmbedding(torch.zeros(4, 2, 2), torch.ones(4, 2, 2))
 
     result = model.embedding_to_image(
         embedding,

@@ -23,7 +23,11 @@ def test_remote_model_operations() -> None:
             "model_id": "example/model",
         }
         if operation == "encode":
-            return {**metadata, "values": [[[1.0]]]}
+            return {
+                **metadata,
+                "values": [[[1.0]]],
+                "noise": [[[0.5]]],
+            }
         from mean_pic.image_io import encode_image
 
         return {
@@ -51,6 +55,7 @@ def test_remote_model_operations() -> None:
     )
 
     assert torch.equal(embedding.values, torch.tensor([[[1.0]]]))
+    assert torch.equal(embedding.noise, torch.tensor([[[0.5]]]))
     assert decoded.size == (2, 2)
     assert interpolated.size == (2, 2)
     assert requests[1][1]["max_iterations"] == 0
@@ -76,6 +81,7 @@ def test_remote_model_sends_bearer_token(monkeypatch) -> None:
                     "protocol_version": PROTOCOL_VERSION,
                     "model_id": "example/model",
                     "values": [[[1.0]]],
+                    "noise": [[[0.5]]],
                 }
             ).encode()
         )

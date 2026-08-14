@@ -75,9 +75,13 @@ class DiffusionImageModel:
             device=self.pipeline.vae.device,
             dtype=self.pipeline.vae.dtype,
         )
-        encoded = self.pipeline.vae.encode(pixels).latent_dist.mode()
-        values = _scale_latents(encoded, self.pipeline.vae.config)
-        return ImageEmbedding(values[0].detach().float().cpu())
+        distribution = self.pipeline.vae.encode(pixels).latent_dist
+        values = _scale_latents(distribution.mode(), self.pipeline.vae.config)
+        noise = _scale_noise(distribution.std, self.pipeline.vae.config)
+        return ImageEmbedding(
+            values[0].detach().float().cpu(),
+            noise[0].detach().float().cpu(),
+        )
 
     @torch.inference_mode()
     def embedding_to_image(
@@ -137,6 +141,10 @@ def _unscale_latents(latents: torch.Tensor, config: Any) -> torch.Tensor:
     shift = getattr(config, "shift_factor", None) or 0.0
     scale = float(config.scaling_factor)
     return latents / scale + shift
+
+
+def _scale_noise(noise: torch.Tensor, config: Any) -> torch.Tensor:
+    return noise * abs(float(config.scaling_factor))
 
 
 def _join_prompt(prompt: str | None, configured_prompt: str) -> str:

@@ -2,8 +2,8 @@
 
 `mean-pic` explores image diffusion latent space in the same style as
 [`mean-idea`](https://github.com/motus/mean-idea). It encodes two images with a
-model VAE, averages their latent tensors, and converts the mean latent back to
-an image.
+model VAE, combines their latent tensors using the VAE's component-wise
+uncertainty, and converts the result back to an image.
 
 ```console
 uv run mean-pic tests/example/cat.jpg tests/example/fish.jpg result.jpg
@@ -101,8 +101,12 @@ result.save("result.png")
 ```
 
 The lower-level API exposes `image_to_embedding()`,
-`embedding_to_image()`, and `mean_embeddings()`. `ImageEmbedding.values` is a
-floating-point tensor shaped `[latent_channels, latent_height, latent_width]`.
+`embedding_to_image()`, and `mean_embeddings()`. `ImageEmbedding.values` and
+`ImageEmbedding.noise` are floating-point tensors shaped
+`[latent_channels, latent_height, latent_width]`. `noise` is the VAE posterior
+standard deviation in scaled latent units. Embeddings are combined
+component-by-component with inverse-variance weighting, so lower-noise values
+receive more influence.
 
 ## HTTP API
 
@@ -114,7 +118,9 @@ uv run uvicorn mean_pic.server:app --host 0.0.0.0 --port 8000
 ```
 
 The service provides `POST /encode`, `POST /decode`, `POST /interpolate`, and
-`GET /health`. Configure it with `MEAN_PIC_MODEL_ID`, `MEAN_PIC_PROMPT`,
+`GET /health`. Encode responses and decode requests contain matching `values`
+and `noise` tensors. Configure the service with `MEAN_PIC_MODEL_ID`,
+`MEAN_PIC_PROMPT`,
 `MEAN_PIC_STEPS`, `MEAN_PIC_STRENGTH`, `MEAN_PIC_GUIDANCE_SCALE`,
 `MEAN_PIC_DEVICE`, `MEAN_PIC_DTYPE`, and `MEAN_PIC_CPU_OFFLOAD=1`.
 

@@ -10,7 +10,10 @@ from mean_pic.service import LatentImageService
 
 class FakeModel:
     def image_to_embedding(self, image: Image.Image) -> ImageEmbedding:
-        return ImageEmbedding(torch.full((1, 1, 1), float(image.width)))
+        return ImageEmbedding(
+            torch.full((1, 1, 1), float(image.width)),
+            torch.full((1, 1, 1), 0.5),
+        )
 
     def embedding_to_image(
         self,
@@ -41,6 +44,7 @@ def test_service_executes_operations() -> None:
         "decode",
         request(
             values=[[[4.0]]],
+            noise=[[[0.5]]],
             prompt="blend",
             max_iterations=0,
         ),
@@ -55,6 +59,7 @@ def test_service_executes_operations() -> None:
     )
 
     assert encoded["values"] == [[[4.0]]]
+    assert encoded["noise"] == [[[0.5]]]
     assert decode_image(decoded["image"]).size == (3, 2)
     assert decode_image(interpolated["image"]).size == (3, 2)
 
@@ -63,10 +68,18 @@ def test_service_executes_operations() -> None:
     ("operation", "payload", "message"),
     [
         ("encode", request(image="invalid"), "base64"),
-        ("decode", request(values=[1.0]), "image latent"),
+        ("decode", request(values=[1.0], noise=[1.0]), "image embedding"),
         ("interpolate", request(images=[]), "non-empty"),
-        ("decode", request(values=[[[1.0]]], prompt=1), "prompt"),
-        ("decode", request(values=[[[1.0]]], max_iterations=-1), "non-negative"),
+        (
+            "decode",
+            request(values=[[[1.0]]], noise=[[[1.0]]], prompt=1),
+            "prompt",
+        ),
+        (
+            "decode",
+            request(values=[[[1.0]]], noise=[[[1.0]]], max_iterations=-1),
+            "non-negative",
+        ),
         ("unknown", request(), "unsupported"),
     ],
 )
